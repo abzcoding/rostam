@@ -3,6 +3,7 @@ from os import path, remove
 from sqlalchemy.exc import OperationalError
 from rostam.db.models.container import Docker
 from rostam.db.models.timeentry import TimeEntry
+from rostam.db.models.vcs import GITRepo
 
 
 class Database(object):
@@ -18,6 +19,8 @@ class Database(object):
             "CREATE TABLE IF NOT EXISTS containers(id INTEGER PRIMARY KEY AUTOINCREMENT, name TEXT NOT NULL, tag TEXT NOT NULL, interval INT, UNIQUE (name,tag) ON CONFLICT ROLLBACK)")
         self.db.query(
             "CREATE TABLE IF NOT EXISTS timetable(id INTEGER PRIMARY KEY AUTOINCREMENT , build_date TIMESTAMP NOT NULL,build_output TEXT,build_result TEXT, container_id INTEGER, FOREIGN KEY(container_id) REFERENCES containers(id))")
+        self.db.query(
+            "CREATE TABLE IF NOT EXISTS vcs(id INTEGER PRIMARY KEY AUTOINCREMENT, repo TEXT NOT NULL , built_revision TEXT, latest_revision TEXT,container_id INTEGER, FOREIGN KEY(container_id) REFERENCES containers(id),UNIQUE (id,container_id) ON CONFLICT ROLLBACK)")
 
     def insert(self, value=None):
         if value is None:
@@ -30,6 +33,11 @@ class Database(object):
                 'INSERT INTO timetable(container_id, build_date,build_output,build_result) VALUES (:container_id, :build_date,:build_output,:build_result)',
                 container_id=value.container_id, build_date=value.timestamp, build_output=value.build_output,
                 build_result=value.build_result)
+        elif isinstance(value, GITRepo):
+            self.db.query(
+                'INSERT INTO vcs(container_id,built_revision,latest_revision,repo) VALUES (:container_id,:built_revision,:latest_revision:repo)',
+                container_id=value.container_id, built_revision=value.built_revision,
+                latest_revision=value.latest_revision, repo=value.repo)
 
     def get_container_id(self, container_name, container_tag=None):
         container_id = None
@@ -44,6 +52,15 @@ class Database(object):
         except OperationalError:
             pass
         return container_id
+
+    def get_container_repo_id(self, container_name, container_tag=None):
+        container_id = self.get_container_id(container_name, container_tag)
+        try:
+            res = self.db.query('SELECT * FROM vcs WHERE container_id=:idd', idd=container_id)
+            return int(res[0]['id']), res[0]['repo']
+        except OperationalError:
+            # no container vcs found
+            return -1, None
 
     def delete_db(self):
         self.db.close()
