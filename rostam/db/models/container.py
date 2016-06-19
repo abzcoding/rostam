@@ -1,5 +1,6 @@
 class Docker(object):
-    def __init__(self, name, tag=None, interval=None):
+    def __init__(self, name, tag=None, interval=None, timeout=600):
+        self.timeout = timeout
         self.name = name
         if tag is None:
             self.tag = "latest"

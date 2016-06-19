@@ -1,7 +1,5 @@
 from apscheduler.schedulers.background import BackgroundScheduler
 from apscheduler.executors.pool import ThreadPoolExecutor, ProcessPoolExecutor
-from rostam.schedule.runner import pull, build
-
 
 class Scheduler(object):
     def __int__(self):
@@ -11,13 +9,7 @@ class Scheduler(object):
         }
         self.scheduler = BackgroundScheduler(executors=executors)
 
-    def add_job(self, minutes=2, job_id=None, args=None, job_type="build"):
-        if job_type == "build":
-            job = build
-        elif job_type == "clone":
-            job = pull
-        else:
-            return
+    def add_job(self, job_type, minutes=2, job_id=None, args=None):
         if job_id is None:
             self.scheduler.add_job(job, 'interval', minutes=minutes, args=args)
         else:

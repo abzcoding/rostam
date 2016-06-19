@@ -4,10 +4,12 @@ from sqlalchemy.exc import OperationalError
 from rostam.db.models.container import Docker
 from rostam.db.models.timeentry import TimeEntry
 from rostam.db.models.vcs import GITRepo
+from rostam.db.base import BaseDB
 
 
-class Database(object):
+class Database(BaseDB):
     def __init__(self, location=None):
+        super(Database,self).__init__()
         if location is None:
             location = 'rostam.db'
         self.location = location
@@ -16,7 +18,7 @@ class Database(object):
 
     def create_db(self):
         self.db.query(
-            "CREATE TABLE IF NOT EXISTS containers(id INTEGER PRIMARY KEY AUTOINCREMENT, name TEXT NOT NULL, tag TEXT NOT NULL, interval INT, UNIQUE (name,tag) ON CONFLICT ROLLBACK)")
+            "CREATE TABLE IF NOT EXISTS containers(id INTEGER PRIMARY KEY AUTOINCREMENT, name TEXT NOT NULL, tag TEXT NOT NULL,timeout INT, interval INT, UNIQUE (name,tag) ON CONFLICT ROLLBACK)")
         self.db.query(
             "CREATE TABLE IF NOT EXISTS timetable(id INTEGER PRIMARY KEY AUTOINCREMENT , build_date TIMESTAMP NOT NULL,build_output TEXT,build_result TEXT, container_id INTEGER, FOREIGN KEY(container_id) REFERENCES containers(id))")
         self.db.query(
@@ -26,8 +28,8 @@ class Database(object):
         if value is None:
             raise RuntimeError("cannot insert None object")
         elif isinstance(value, Docker):
-            self.db.query('INSERT INTO containers(name, tag, interval) VALUES (:name,:tag,:interval)',
-                          name=value.name, tag=value.tag, interval=value.interval)
+            self.db.query('INSERT INTO containers(name, tag, interval,timeout) VALUES (:name,:tag,:interval,:timeout)',
+                          name=value.name, tag=value.tag, interval=value.interval, timeout=value.timeout)
         elif isinstance(value, TimeEntry):
             self.db.query(
                 'INSERT INTO timetable(container_id, build_date,build_output,build_result) VALUES (:container_id, :build_date,:build_output,:build_result)',
