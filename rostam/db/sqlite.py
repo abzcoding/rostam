@@ -1,7 +1,8 @@
 import records
 from os import path, remove
 from sqlalchemy.exc import OperationalError
-from rostam.db.models.container import Docker, TimeEntry
+from rostam.db.models.container import Docker
+from rostam.db.models.timeentry import TimeEntry
 
 
 class Database(object):
@@ -16,7 +17,7 @@ class Database(object):
         self.db.query(
             "CREATE TABLE IF NOT EXISTS containers(id INTEGER PRIMARY KEY AUTOINCREMENT, name TEXT NOT NULL, tag TEXT NOT NULL, interval INT, UNIQUE (name,tag) ON CONFLICT ROLLBACK)")
         self.db.query(
-            "CREATE TABLE IF NOT EXISTS timetable(id INTEGER PRIMARY KEY AUTOINCREMENT , build_date TIMESTAMP NOT NULL, container_id INTEGER, FOREIGN KEY(container_id) REFERENCES containers(id))")
+            "CREATE TABLE IF NOT EXISTS timetable(id INTEGER PRIMARY KEY AUTOINCREMENT , build_date TIMESTAMP NOT NULL,build_output TEXT,build_result TEXT, container_id INTEGER, FOREIGN KEY(container_id) REFERENCES containers(id))")
 
     def insert(self, value=None):
         if value is None:
@@ -25,9 +26,10 @@ class Database(object):
             self.db.query('INSERT INTO containers(name, tag, interval) VALUES (:name,:tag,:interval)',
                           name=value.name, tag=value.tag, interval=value.interval)
         elif isinstance(value, TimeEntry):
-            self.db.query('INSERT INTO timetable(container_id, build_date) VALUES (:container_id, :build_date)',
-                          container_id=self.get_container_id(container_name=value.name, container_tag=value.tag),
-                          build_date=value.timestamp)
+            self.db.query(
+                'INSERT INTO timetable(container_id, build_date,build_output,build_result) VALUES (:container_id, :build_date,:build_output,:build_result)',
+                container_id=value.container_id, build_date=value.timestamp, build_output=value.build_output,
+                build_result=value.build_result)
 
     def get_container_id(self, container_name, container_tag=None):
         container_id = None

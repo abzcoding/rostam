@@ -1,7 +1,8 @@
 from os import path, remove
 import unittest
 from rostam.db.sqlite import Database
-from rostam.db.models.container import Docker, TimeEntry
+from rostam.db.models.container import Docker
+from rostam.db.models.timeentry import TimeEntry
 from datetime import datetime
 
 
@@ -41,10 +42,11 @@ class SQLITETest(unittest.TestCase):
         rows = db.db.query("select name from containers")
         self.assertIn(dc1, rows.all(as_dict=True))
         time_entry = datetime(2014, 1, 5, 16, 52, 57, 523000)
-        entry = TimeEntry(name="insertTest", timestamp=time_entry)
+        entry = TimeEntry(container_id=1, timestamp=time_entry, build_output="something")
         db.insert(entry)
-        rows = db.db.query("select build_date,container_id from timetable")
-        dc2 = {'build_date': time_entry.strftime("%Y-%m-%d %H:%M:%S.%f"), 'container_id': 1}
+        rows = db.db.query("select build_date,container_id,build_output,build_result from timetable")
+        dc2 = {'build_date': time_entry.strftime("%Y-%m-%d %H:%M:%S.%f"), 'build_output': 'something',
+               'build_result': 'succeed', 'container_id': 1}
         self.assertIn(dc2, rows.all(as_dict=True))
 
     def test_database_remove(self):
