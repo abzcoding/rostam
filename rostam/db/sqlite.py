@@ -5,7 +5,7 @@ Inhereted from ``BaseDB`` and will represent a sqlite database
 
 # Import Python libs
 import logging
-from datetime import datetime
+from datetime import datetime, timedelta
 from os import path, remove
 
 # Import third party libs
@@ -119,21 +119,57 @@ class Database(BaseDB):
         :param container_id: int
         container id that we want to calculate it's next build date
 
-        :return: next build date or None
-        :rtype: string
+        :return: is it time to rebuild the container_id?
+        :rtype: boolean
         '''
         time = datetime.now()
         try:
             build_date = self.db.query(
                 'SELECT build_date FROM timetable WHERE container_id=:idd ORDER BY build_date DESC LIMIT 1', idd=container_id)[0][0]
             interval = int(self.db.query('SELECT interval FROM containers WHERE id=:idd', idd=container_id)[0][0])
-            current_time = time.strftime("%Y-%m-%d %H:%M:%S.%f")
-            # DOING: check if they're version has been changed and datetime.now() -
-            # their_latest_date >= interval then schedule their build
+            current_time = time
+            build_time = datetime.strptime(build_date, "%Y-%m-%d %H:%M:%S.%f")
+            if current_time >= build_time + timedelta(minutes=interval):
+                return True
+            return False
         except (TypeError, ValueError, OperationalError):
             log.warn("cannot calculate build time for [0]".format(str(container_id)))
             # cannot get build_date or interval
-            return None
+            return False
+
+    def update_vcs_revision(self, container_id, built_revision=None, latest_revision=None):
+        '''
+        update the build or latest revisions
+
+        :param container_id: int
+        id of the container that need to be updated
+        :param built_revision: string : None
+        latest revision that were built successfully
+        :param latest_revision: string : None
+        latest revision that were pulled successfully
+
+        :return: was the update operation successfull?
+        :rtype: boolean
+        '''
+        try:
+            if built_revision is not None and latest_revision is not None:
+                # update both
+                self.db.query("UPDATE vcs SET built_revision=:built, latest_revision=:latest WHERE container_id=:idd",
+                              built=built_revision, latest=latest_revision, idd=container_id)
+            elif built_revision is not None:
+                # only update built_revision
+                self.db.query("UPDATE vcs SET built_revision=:built WHERE container_id=:idd",
+                              built=built_revision, idd=container_id)
+            elif latest_revision is not None:
+                # only update latest_revision
+                self.db.query("UPDATE vcs SET latest_revision=:latest WHERE container_id=:idd",
+                              latest=latest_revision, idd=container_id)
+            else:
+                # nothing has been updated
+                return False
+            return True
+        except OperationalError:
+            log.warn("updating the build or latest revision failed")
 
     def get_container_repo_id(self, container_name, container_tag=None):
         '''

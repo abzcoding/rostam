@@ -42,15 +42,17 @@ def main():
     try:
         rows = db.db.query('SELECT * FROM containers')
         for r in rows:
+            container_id = b.get_container_id(container_name=r['name'], container_tag=r['tag'])
             repo_id, repo = db.get_container_repo_id(container_name=r['name'], container_tag=r['tag'])[0]
+            repo_path = BASE_FOLDER + "repos/" + str(r['name']) + '-' + str(r['tag'])
             if repo_id > 0:
                 sched.add_job(job_type=runner.pull, minutes=(int(r['interval']) * 2) / 3,
                               job_id="pull-" + str(r['name']) + '-' + str(r['tag']),
-                              args=[repo, BASE_FOLDER + "repos/" + str(r['name']) + '-' + str(r['tag'])])
+                              args=[container_id, repo, repo_path])
                 sched.add_job(job_type=runner.build, minutes=r['interval'],
                               job_id="build-" + str(r['name']) + '-' + str(r['tag']),
-                              args=[BASE_FOLDER + "repos/" + str(r['name']) + '-' + str(r['tag']), r['timeout'], r['tag']])
-        while True:
+                              args=[container_id, repo, repo_path, r['timeout'], r['tag']])
+        while False:
             # TODO:10 check if any new repo has been added and add it to the jobs queue
             pass
     except (KeyboardInterrupt, SystemExit):
