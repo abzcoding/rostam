@@ -3,10 +3,11 @@ python:
   - "2.7"
 
 install:
-  pip install -r requirements.txt
+  - pip install -r requirements.txt
+  - pip install coveralls
 
 script:
-  python -m unittest discover -s tests -p "*.py"
+  coverage run --source=rostam -m unittest discover -s tests -p "*.py"
 
 after_success:
   coveralls

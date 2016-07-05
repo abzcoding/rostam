@@ -1,5 +1,0 @@
-gittle
-docker-py
-records
-apscheduler
-coveralls
