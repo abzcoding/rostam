@@ -1,9 +1,30 @@
+# -*- coding: utf-8 -*-
+'''
+some functions to help start the project from ground up
+'''
+
+# Import Python libs
+import logging
+
+# Import rostam libs
+from rostam.db.models.container import Docker
 from rostam.db.models.vcs import GITRepo
 from rostam.db.sqlite import Database
-from rostam.db.models.container import Docker
+from rostam.main import BASE_FOLDER
+
+log = logging.getLogger(__name__)
 
 
 def read_properties_file(properties_file="examples/containers.properties"):
+    '''
+    read from a properties_file to create containers
+
+    :param properties_file: string : 'examples/containers.properties'
+    location of the properties file
+
+    :return: array that contains all of the mentioned containers in the ``properties_file``
+    :rtype: array
+    '''
     containers = {}
     with open(properties_file, mode='r') as inp:
         lines = inp.readlines()
@@ -18,9 +39,15 @@ def read_properties_file(properties_file="examples/containers.properties"):
 
 
 def sync(properties_file="examples/containers.properties"):
-    db = Database(location="/opt/rosta/rostam.db")
+    '''
+    add all the repositories in the properties file to the database
+    and then make sure all them have their own vcs repository in the db
+
+    :param properties_file: string : 'examples/containers.properties'
+    location of the properties file
+    '''
+    db = Database(location=BASE_FOLDER + "rostam.db")
     rows = db.db.query('SELECT * FROM containers')
-    # TODO: read from a properties file and sync all the repositories
     containers = read_properties_file(properties_file)
     # STEP 1: make sure all repositories exist in containers table
     for item in containers.values():

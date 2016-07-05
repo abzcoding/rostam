@@ -2,10 +2,13 @@
 __pycache__/
 *.py[cod]
 *$py.class
-
+.imdone
+*.db
 # C extensions
 *.so
-
+tcl
+include
+Scripts
 # Distribution / packaging
 .Python
 env/
