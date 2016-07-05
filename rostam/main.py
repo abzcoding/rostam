@@ -1,20 +1,22 @@
 from time import sleep
 
 from rostam.schedule.async import Scheduler
-from rostam.utils.sync import sync
 
 DB_CONNECTOR = None
-BASE_FOLDER = None
+BASE_FOLDER = ""
+RUNNER = None
 
 
 def auto_build(base_dir="/opt/rostam/", db_type="sqlite", db_name="rostam", db_username=None, db_password=None,
                job_runner="local"):
+    # set the default db
     if str(db_type).lower() == "sqlite":
         from rostam.db.sqlite import Database
     elif str(db_type).lower() == "postgresql":
         from rostam.db.postgresql import Database
     elif str(db_type).lower() == "mysql":
         from rostam.db.mysql import Database
+    # set the default runner module
     if str(job_runner).lower() == "local":
         from rostam.schedule.runners.local import Runner
     elif str(job_runner).lower() == "ansible":
@@ -23,6 +25,7 @@ def auto_build(base_dir="/opt/rostam/", db_type="sqlite", db_name="rostam", db_u
         from rostam.schedule.runners.saltstack import Runner
     DB_CONNECTOR = Database
     BASE_FOLDER = base_dir
+    RUNNER = Runner
 
 
 def main():
@@ -35,8 +38,9 @@ def main():
     BASE_FOLDER = "/opt/rostam/"
     '''
     # sync repos from properties file
-    runner = Runner()
-    sync(properties_file=BASE_FOLDER + "containers.properties")
+    runner = RUNNER()
+    from rostam.utils.file_sync import sync_properties
+    sync_properties(properties_file=BASE_FOLDER + "containers.properties")
     db = Database(location=BASE_FOLDER + "rostam.db")
     sched = Scheduler()
     try:
@@ -56,8 +60,8 @@ def main():
             # TODO:10 check if any new repo has been added and add it to the jobs queue
             pass
     except (KeyboardInterrupt, SystemExit):
-        sched.shutdown()
         try:
+            sched.shutdown()
             db.db.close()
         except Exception:
             pass

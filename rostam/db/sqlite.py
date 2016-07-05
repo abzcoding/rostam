@@ -81,7 +81,7 @@ class Database(BaseDB):
                 build_result=value.build_result)
         elif isinstance(value, GITRepo):
             self.db.query(
-                'INSERT INTO vcs(container_id,built_revision,latest_revision,repo) VALUES (:container_id,:built_revision,:latest_revision:repo)',
+                'INSERT INTO vcs(container_id,built_revision,latest_revision,repo) VALUES (:container_id,:built_revision,:latest_revision,:repo)',
                 container_id=value.container_id, built_revision=value.built_revision,
                 latest_revision=value.latest_revision, repo=value.repo)
 
@@ -187,7 +187,7 @@ class Database(BaseDB):
         try:
             res = self.db.query('SELECT * FROM vcs WHERE container_id=:idd', idd=container_id)
             return int(res[0]['id']), res[0]['repo']
-        except (OperationalError, TypeError, ValueError):
+        except (OperationalError, TypeError, ValueError, IndexError):
             log.info('no container vcs found for [0]:[1]'.format(str(container_name), str(container_tag)))
             # no container vcs found
             return -1, None

@@ -38,7 +38,7 @@ def read_properties_file(properties_file="examples/containers.properties"):
     return containers
 
 
-def sync(properties_file="examples/containers.properties"):
+def sync_properties(properties_file="examples/containers.properties"):
     '''
     add all the repositories in the properties file to the database
     and then make sure all them have their own vcs repository in the db
@@ -46,7 +46,7 @@ def sync(properties_file="examples/containers.properties"):
     :param properties_file: string : 'examples/containers.properties'
     location of the properties file
     '''
-    db = Database(location=BASE_FOLDER + "rostam.db")
+    db = Database(location=str(BASE_FOLDER) + "rostam.db")
     rows = db.db.query('SELECT * FROM containers')
     containers = read_properties_file(properties_file)
     # STEP 1: make sure all repositories exist in containers table
@@ -55,12 +55,13 @@ def sync(properties_file="examples/containers.properties"):
             cn = Docker(name=item['name'], tag=item['tag'], interval=item['interval'])
             db.insert(cn)
     # STEP 2: make sure all containers have a VCS repo
+    rows = db.db.query('SELECT * FROM containers')
     for r in rows:
-        if 'tag' not in r:
-            vcs_id = db.get_container_repo_id(container_name=r['name'])
+        if r['tag'] is None:
+            vcs_id, vcs_repo = db.get_container_repo_id(container_name=r['name'])
             container_id = db.get_container_id(container_name=r['name'])
         else:
-            vcs_id = db.get_container_repo_id(container_name=r['name'], container_tag=r['tag'])
+            vcs_id, vcs_repo = db.get_container_repo_id(container_name=r['name'], container_tag=r['tag'])
             container_id = db.get_container_id(container_name=r['name'], container_tag=r['tag'])
         if vcs_id < 0:
             # there is no vcs for this container, add it yourself
