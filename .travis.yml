@@ -10,4 +10,5 @@ script:
   coverage run --source=rostam -m unittest discover -s tests -p "*.py"
 
 after_success:
-  coveralls
+  - coveralls
+  - bash <(curl -s https://codecov.io/bash)
