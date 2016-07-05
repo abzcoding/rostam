@@ -5,6 +5,7 @@ python:
 install:
   - pip install -r requirements.txt
   - pip install coveralls
+  - pip install codeclimate-test-reporter
 
 script:
   coverage run --source=rostam -m unittest discover -s tests -p "*.py"
@@ -12,3 +13,4 @@ script:
 after_success:
   - coveralls
   - bash <(curl -s https://codecov.io/bash)
+  - codeclimate-test-reporter
