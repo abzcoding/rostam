@@ -10,7 +10,6 @@ class APITest(unittest.TestCase):
     def test_client_version(self):
         cli = DockerApi()
         try:
-            print cli.version()
             self.assertTrue(cli.version()['Os'] == 'linux' or cli.version()['Os'] == 'windows')
         except ConnectionError:
             print "cannot connect to docker api"
@@ -20,6 +19,7 @@ class APITest(unittest.TestCase):
         output = ""
         build_result = "succeed"
         try:
+            notimportant = cli.version()
             output = cli.build(directory=".\\tests\\docker", tag="test", timeout=100)
         except (RuntimeError, ConnectionError):
             build_result = 'failed'
