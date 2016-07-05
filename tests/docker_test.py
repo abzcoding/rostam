@@ -1,13 +1,17 @@
 import unittest
-from rostam.docker.api import DockerApi
+
 from requests.exceptions import ConnectionError
+
+from rostam.docker.api import DockerApi
 
 
 class APITest(unittest.TestCase):
+
     def test_client_version(self):
         cli = DockerApi()
         try:
-            self.assertEqual(cli.version()['Os'], 'linux')
+            print cli.version()
+            self.assertTrue(cli.version()['Os'] == 'linux' or cli.version()['Os'] == 'windows')
         except ConnectionError:
             print "cannot connect to docker api"
 

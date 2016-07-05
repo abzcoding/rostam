@@ -21,7 +21,7 @@ class Scheduler(object):
     Schedules Jobs for us asynchronously
     '''
 
-    def __int__(self):
+    def __init__(self):
         '''
         it defaults to ``ThreadPoolExecutor`` with 20 threads
         and 5 ``ProcessPoolExecutor`` in the memory
@@ -32,12 +32,12 @@ class Scheduler(object):
         }
         self.scheduler = BackgroundScheduler(executors=executors)
 
-    def add_job(self, job_type, minutes=2, job_id=None, args=None):
+    def add_job(self, job, minutes=2, job_id=None, args=None):
         '''
         add a runnable job to the queue
 
-        :param job_type: string
-        type of the job
+        :param job: string
+        a runnable function
         :param minutes: int : 2
         time between each run of this runnable job
         :param job_id: string : None
@@ -55,7 +55,7 @@ class Scheduler(object):
                 self.scheduler.add_job(job, 'interval', minutes=minutes, id=job_id, args=args)
             return True
         except ConflictingIdError:
-            log.error("conflicting id : [0]".format(str(job_id)))
+            log.error("conflicting id : {0}".format(str(job_id)))
             return False
 
     def start(self):

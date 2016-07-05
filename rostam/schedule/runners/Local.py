@@ -43,7 +43,7 @@ class Runner(BaseRunner):
         db = Database(BASE_FOLDER + "rostam.db")
         item = Git(repo_url=repo_url, repo_path=repo_path)
         item.pull()
-        log.info("pulled from [0] to [1]".format(str(repo_url), str(repo_path)))
+        log.info("pulled from {0} to {1}".format(str(repo_url), str(repo_path)))
         db.update_vcs_revision(container_id=container_id, latest_revision=item.commit_info(end=1)[0])
         db.db.close()
 
@@ -67,7 +67,7 @@ class Runner(BaseRunner):
         if db.time_to_build(container_id):
             try:
                 output = cli.build(directory=repo_path, timeout=timeout, tag=tag)
-                log.debug("build result : [0]".format(output))
+                log.debug("build result : {0}".format(output))
                 time_entry = datetime.now()
                 build_time = time_entry.strftime("%Y-%m-%d %H:%M:%S.%f")
                 item = Git(repo_url=repo_url, repo_path=repo_path)
@@ -75,11 +75,11 @@ class Runner(BaseRunner):
                 db.update_vcs_revision(container_id=container_id, built_revision=built_revision)
                 entry = TimeEntry(container_id=container_id, timestamp=build_time, build_output=output)
                 db.insert(entry)
-                log.info("successfully build [0] at revision : [1]".format(
+                log.info("successfully build {0} at revision : {1}".format(
                     str(container_name) + ":" + str(container_tag), str(built_revision)))
                 return True
             except (TypeError, DockerException, InvalidVersion):
-                log.warn("building [0] failed".format(str(container_name) + ":" + str(container_tag)))
+                log.warn("building {0} failed".format(str(container_name) + ":" + str(container_tag)))
                 return False
         else:
             return True

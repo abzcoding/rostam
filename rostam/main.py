@@ -1,10 +1,15 @@
+# Import Python libs
+import logging
 from time import sleep
 
+# Import rostam libs
 from rostam.schedule.async import Scheduler
 
+# constants
 DB_CONNECTOR = None
 BASE_FOLDER = ""
 RUNNER = None
+LOG_FILENAME = "rostam.log"
 
 
 def auto_build(base_dir="/opt/rostam/", db_type="sqlite", db_name="rostam", db_username=None, db_password=None,
@@ -29,6 +34,9 @@ def auto_build(base_dir="/opt/rostam/", db_type="sqlite", db_name="rostam", db_u
 
 
 def main():
+
+    log = logging.getLogger(__name__)
+
     # use the default settings : local runner + sqlite
     auto_build()
     '''

@@ -7,6 +7,7 @@ some functions to help start the project from ground up
 import logging
 
 # Import rostam libs
+import rostam.utils.log_setup
 from rostam.db.models.container import Docker
 from rostam.db.models.vcs import GITRepo
 from rostam.db.sqlite import Database
@@ -33,8 +34,8 @@ def read_properties_file(properties_file="examples/containers.properties"):
                 name, tag, repo, interval = line.strip().split(',')
                 containers[str(name) + ":" + str(tag)] = {'name': name, 'tag': tag, 'repo': repo,
                                                           'interval': int(interval)}
-            except Exception:
-                pass
+            except Exception as e:
+                log.info("exception happend while reading from {0} : {1}".format(properties_file, e))
     return containers
 
 
@@ -54,6 +55,7 @@ def sync_properties(properties_file="examples/containers.properties"):
         if db.get_container_id(item['name'], item['tag']) is None:
             cn = Docker(name=item['name'], tag=item['tag'], interval=item['interval'])
             db.insert(cn)
+    log.info("finished reading from {0}".format(properties_file))
     # STEP 2: make sure all containers have a VCS repo
     rows = db.db.query('SELECT * FROM containers')
     for r in rows:

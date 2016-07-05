@@ -41,9 +41,9 @@ class Database(BaseDB):
             self.db = records.Database("sqlite:///" + str(location))
             self.create_db()
         except ArgumentError as e:
-            log.error("Error in creating [0] : [1]".format(str(location), str(e)))
+            log.error("Error in creating {0} : {1}".format(str(location), str(e)))
         except AttributeError as e:
-            log.error("there are some problems in your query! [0]".format(str(e)))
+            log.error("there are some problems in your query! {0}".format(str(e)))
 
     def create_db(self):
         '''
@@ -109,7 +109,7 @@ class Database(BaseDB):
                     container_id = r.id
                     break
         except OperationalError as e:
-            log.warn("error happend : [0]".format(e))
+            log.warn("error happend : {0}".format(e))
         return container_id
 
     def time_to_build(container_id):
@@ -133,7 +133,7 @@ class Database(BaseDB):
                 return True
             return False
         except (TypeError, ValueError, OperationalError):
-            log.warn("cannot calculate build time for [0]".format(str(container_id)))
+            log.warn("cannot calculate build time for {0}".format(str(container_id)))
             # cannot get build_date or interval
             return False
 
@@ -188,7 +188,7 @@ class Database(BaseDB):
             res = self.db.query('SELECT * FROM vcs WHERE container_id=:idd', idd=container_id)
             return int(res[0]['id']), res[0]['repo']
         except (OperationalError, TypeError, ValueError, IndexError):
-            log.info('no container vcs found for [0]:[1]'.format(str(container_name), str(container_tag)))
+            log.info('no container vcs found for {0}:{1}'.format(str(container_name), str(container_tag)))
             # no container vcs found
             return -1, None
 

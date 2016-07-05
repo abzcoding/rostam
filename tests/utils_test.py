@@ -5,7 +5,7 @@ from rostam.main import BASE_FOLDER
 from rostam.utils.file_sync import read_properties_file, sync_properties
 
 
-class UTILTest(unittest.TestCase):
+class FileSyncTest(unittest.TestCase):
 
     def test_read_properties_file(self):
         res = read_properties_file()
