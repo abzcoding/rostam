@@ -44,7 +44,7 @@ class Runner(BaseRunner):
         item = Git(repo_url=repo_url, repo_path=repo_path)
         item.pull()
         log.info("pulled from {0} to {1}".format(str(repo_url), str(repo_path)))
-        db.update_vcs_revision(container_id=container_id, latest_revision=item.commit_info(end=1)[0])
+        db.update_vcs_revision(container_id=container_id, latest_revision=item.repo.commit_info(end=1)[0])
         db.db.close()
 
     def build(self, container_id, repo_url, repo_path, timeout, tag):
@@ -71,7 +71,7 @@ class Runner(BaseRunner):
                 time_entry = datetime.now()
                 build_time = time_entry.strftime("%Y-%m-%d %H:%M:%S.%f")
                 item = Git(repo_url=repo_url, repo_path=repo_path)
-                built_revision = item.commit_info(end=1)[0]
+                built_revision = item.repo.commit_info(end=1)[0]
                 db.update_vcs_revision(container_id=container_id, built_revision=built_revision)
                 entry = TimeEntry(container_id=container_id, timestamp=build_time, build_output=output)
                 db.insert(entry)
