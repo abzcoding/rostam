@@ -11,7 +11,7 @@ import rostam.utils.log_setup
 from rostam.db.models.container import Docker
 from rostam.db.models.vcs import GITRepo
 from rostam.db.sqlite import Database
-from rostam.main import BASE_FOLDER
+from rostam.utils.constants import Settings
 
 log = logging.getLogger(__name__)
 
@@ -47,7 +47,7 @@ def sync_properties(properties_file="examples/containers.properties"):
     :param properties_file: string : 'examples/containers.properties'
     location of the properties file
     '''
-    db = Database(location=str(BASE_FOLDER) + "rostam.db")
+    db = Database(location=str(Settings.BASE_FOLDER()) + "rostam.db")
     rows = db.db.query('SELECT * FROM containers')
     containers = read_properties_file(properties_file)
     # STEP 1: make sure all repositories exist in containers table

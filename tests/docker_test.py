@@ -10,7 +10,7 @@ class APITest(unittest.TestCase):
     def test_client_version(self):
         cli = DockerApi()
         try:
-            self.assertTrue(cli.version()['Os'] == 'linux' or cli.version()['Os'] == 'windows')
+            self.assertTrue(cli.version()['Os'] == 'linux')
         except ConnectionError:
             print "cannot connect to docker api"
 

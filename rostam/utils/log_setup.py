@@ -1,12 +1,12 @@
 import logging
 import logging.handlers
 
-from rostam.main import LOG_FILENAME
+from rostam.utils.constants import Settings
 
 # setup logging
 logging.getLogger('').setLevel(logging.INFO)
 handler = logging.handlers.RotatingFileHandler(
-    LOG_FILENAME, maxBytes=100000, backupCount=5)
+    Settings.LOG_FILENAME(), maxBytes=100000, backupCount=5)
 format = "%(asctime)s %(name)-20s %(levelname)-8s %(message)s"
 handler.setFormatter(logging.Formatter(format))
 logging.getLogger('').addHandler(handler)

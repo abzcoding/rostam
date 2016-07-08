@@ -51,7 +51,7 @@ class Database(BaseDB):
         '''
 
         self.db.query(
-            "CREATE TABLE IF NOT EXISTS containers(id INTEGER PRIMARY KEY AUTOINCREMENT, name TEXT NOT NULL, tag TEXT NOT NULL,timeout INT, interval INT, UNIQUE (name,tag) ON CONFLICT ROLLBACK)")
+            "CREATE TABLE IF NOT EXISTS containers(id INTEGER PRIMARY KEY AUTOINCREMENT, name TEXT NOT NULL, tag TEXT NOT NULL,timeout INT, interval INT,enabled BOOLEAN, UNIQUE (name,tag) ON CONFLICT ROLLBACK)")
         self.db.query(
             "CREATE TABLE IF NOT EXISTS timetable(id INTEGER PRIMARY KEY AUTOINCREMENT , build_date TIMESTAMP NOT NULL,build_output TEXT,build_result TEXT, container_id INTEGER, FOREIGN KEY(container_id) REFERENCES containers(id))")
         self.db.query(
@@ -72,8 +72,8 @@ class Database(BaseDB):
             log.warn("value cannot be None when inserting into database!")
             raise RuntimeError("cannot insert None object")
         elif isinstance(value, Docker):
-            self.db.query('INSERT INTO containers(name, tag, interval,timeout) VALUES (:name,:tag,:interval,:timeout)',
-                          name=value.name, tag=value.tag, interval=value.interval, timeout=value.timeout)
+            self.db.query('INSERT INTO containers(name, tag, interval,timeout,enabled) VALUES (:name,:tag,:interval,:timeout,:enabled)',
+                          name=value.name, tag=value.tag, interval=value.interval, timeout=value.timeout, enabled=value.enabled)
         elif isinstance(value, TimeEntry):
             self.db.query(
                 'INSERT INTO timetable(container_id, build_date,build_output,build_result) VALUES (:container_id, :build_date,:build_output,:build_result)',
@@ -191,6 +191,12 @@ class Database(BaseDB):
             log.info('no container vcs found for {0}:{1}'.format(str(container_name), str(container_tag)))
             # no container vcs found
             return -1, None
+
+    def set_container_status(self, container_id, enabled):
+        try:
+            self.db.query("UPDATE containers SET enabled=:enabled WHERE container_id=:idd", enabled=enabled, idd=container_id)
+        except OperationalError as e:
+            log.warn('error while enabled container {0} : {1}'.format(str(container_id), e))
 
     def delete_db(self):
         '''

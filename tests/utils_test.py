@@ -1,7 +1,7 @@
 import unittest
 
 from rostam.db.sqlite import Database
-from rostam.main import BASE_FOLDER
+from rostam.utils.constants import Settings
 from rostam.utils.file_sync import read_properties_file, sync_properties
 
 
@@ -16,7 +16,7 @@ class FileSyncTest(unittest.TestCase):
 
     def test_sync_properties(self):
         sync_properties()
-        db = Database(location=BASE_FOLDER + "rostam.db")
+        db = Database(location=Settings.BASE_FOLDER() + "rostam.db")
         res = db.db.query('select * from vcs')
         self.assertEqual(res[0]['id'], 1)
         self.assertEqual(res[0]['repo'], 'https://github.com/docker-library/hello-world.git')

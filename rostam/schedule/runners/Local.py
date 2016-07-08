@@ -13,10 +13,12 @@ from docker.errors import DockerException, InvalidVersion
 # Import rostam libs
 from rostam.db.models.timeentry import TimeEntry
 from rostam.docker.api import DockerApi
-from rostam.main import DB_CONNECTOR as Database
-from rostam.main import BASE_FOLDER
-from rostam.schedule.runners.base import BaseRunner
+from rostam.utils.constants import Loader, Settings
 from rostam.vcs.git import Git
+
+Database = Loader.class_loader(Settings.DB_CONNECTOR())
+BASE_FOLDER = Settings.BASE_FOLDER()
+BaseRunner = Loader.class_loader(Settings.RUNNER())
 
 log = logging.getLogger(__name__)
 

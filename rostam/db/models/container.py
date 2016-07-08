@@ -14,7 +14,7 @@ class Docker(object):
     Represent a Docker container object with the support of name, tag , build interval and build timeout
     '''
 
-    def __init__(self, name, tag=None, interval=None, timeout=600):
+    def __init__(self, name, tag=None, interval=None, timeout=600, enabled=False):
         '''
         :param name: string
         Name of the docker container
@@ -24,6 +24,8 @@ class Docker(object):
         Interval to rebuild this container in minutes, will round up to 10 minute chunks
         :param timeout: int : 600
         Build Timeout for this container
+        :param enabled: boolean : false
+        is it enabled or what!?
         '''
         if name is None:
             log.error("Cannot create a docker container with empty name!")
@@ -40,6 +42,7 @@ class Docker(object):
             self.interval = (int(interval / 10) + 1) * 10
         else:
             self.interval = int(interval)
+        self.enabled = enabled
 
     def __str__(self):
         '''
