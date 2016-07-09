@@ -35,11 +35,11 @@ def read_properties_file(properties_file="examples/containers.properties"):
                 containers[str(name) + ":" + str(tag)] = {'name': name, 'tag': tag, 'repo': repo,
                                                           'interval': int(interval)}
             except Exception as e:
-                log.info("exception happend while reading from {0} : {1}".format(properties_file, e))
+                log.warn("exception happend while reading from {0} : {1}".format(properties_file, e))
     return containers
 
 
-def sync_properties(properties_file="examples/containers.properties"):
+def sync_properties(properties_file="examples/containers.properties", db_file="rostam.db"):
     '''
     add all the repositories in the properties file to the database
     and then make sure all them have their own vcs repository in the db
@@ -47,7 +47,7 @@ def sync_properties(properties_file="examples/containers.properties"):
     :param properties_file: string : 'examples/containers.properties'
     location of the properties file
     '''
-    db = Database(location=str(Settings.BASE_FOLDER()) + "rostam.db")
+    db = Database(location=db_file)
     rows = db.db.query('SELECT * FROM containers')
     containers = read_properties_file(properties_file)
     # STEP 1: make sure all repositories exist in containers table
@@ -69,4 +69,5 @@ def sync_properties(properties_file="examples/containers.properties"):
             # there is no vcs for this container, add it yourself
             item = GITRepo(container_id=container_id, repo=containers[r['name'] + ":" + r['tag']]['repo'])
             db.insert(item)
+            log.info("added {0} to vcs table".format(r['name']))
     db.db.close()

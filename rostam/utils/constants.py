@@ -15,7 +15,10 @@ class Settings(object):
 
     @staticmethod
     def BASE_FOLDER():
-        return Settings.base_folder
+        if Settings.base_folder is None:
+            return ""
+        else:
+            return Settings.base_folder
 
     @staticmethod
     def LOG_FILENAME():
