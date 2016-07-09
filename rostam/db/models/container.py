@@ -38,7 +38,10 @@ class Docker(object):
             self.tag = tag
         if interval is None:
             self.interval = 60
-        elif int(interval) % 10 != 0:
+        elif int(interval) == 666:
+            # for testing purposes only , p.s: dude i'm not satanist!
+            self.interval = 2
+        elif int(interval) % 10 != 0 and int(interval) > 0:
             self.interval = (int(interval / 10) + 1) * 10
         else:
             self.interval = int(interval)

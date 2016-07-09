@@ -1,6 +1,9 @@
+import sys
 import unittest
 
-from rostam.start import auto_build
+from mock import patch
+
+from rostam.start import auto_build, main
 from rostam.utils.constants import Loader, Settings
 
 
@@ -13,6 +16,11 @@ class MainTest(unittest.TestCase):
         db = DATABASE()
         self.assertEqual(db.location, "rostam.db")
         db.delete_db()
+
+    def test_main(self):
+        testargs = ["start.py", "-l", "examples", "-o", "examples/rostam.log", "-t", "True"]
+        with patch.object(sys, 'argv', testargs):
+            sample = main()
 
 
 if __name__ == '__main__':

@@ -36,13 +36,13 @@ def create_jobs(db, sched, runner):
         repo_id, repo = db.get_container_repo_id(container_name=r['name'], container_tag=r['tag'])
         repo_path = path.join(Settings.BASE_FOLDER(), "repos", str(r['name']) + '-' + str(r['tag']))
         if repo_id > 0:
-            sched.add_job(job_type=runner.pull, minutes=(int(r['interval']) * 2) / 3,
+            sched.add_job(job=runner.pull, minutes=int(r['interval']) / 2,
                           job_id="pull-" + str(r['name']) + '-' + str(r['tag']),
                           args=[container_id, repo, repo_path])
-            sched.add_job(job_type=runner.build, minutes=r['interval'],
+            sched.add_job(job=runner.build, minutes=int(r['interval']),
                           job_id="build-" + str(r['name']) + '-' + str(r['tag']),
                           args=[container_id, repo, repo_path, r['timeout'], r['tag']])
-            set_container_status(container_id=container_id, enabled=True)
+            db.set_container_status(container_id=container_id, enabled=True)
 
 
 def main():
@@ -54,6 +54,7 @@ def main():
     parser.add_argument('--dbuser', help="username of the database")
     parser.add_argument('--dbpass', help="password of the database")
     parser.add_argument('-o', '--output', help="log output file location")
+    parser.add_argument('-t', '--test', type=bool, help="for testing purposes only")
     args = parser.parse_args()
 
     auto_build(base_dir=args.location, db_type=args.database, job_runner=args.runner,
@@ -76,6 +77,11 @@ def main():
     try:
         while True:
             create_jobs(db, sched, runner)
+            if sched.scheduler.running == False:
+                sched.start()
+            if args.test:
+                sleep(100)
+                raise KeyboardInterrupt
             sleep(60)
     except (KeyboardInterrupt, SystemExit):
         try:

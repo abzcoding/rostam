@@ -6,19 +6,21 @@ Inhereted from ``BaseRunner`` and will represent a Runnable Object
 # Import Python libs
 import logging
 from datetime import datetime
+from os import path
 
 # Import third party libs
 from docker.errors import DockerException, InvalidVersion
+from gittle import Gittle
 
 # Import rostam libs
 from rostam.db.models.timeentry import TimeEntry
 from rostam.docker.api import DockerApi
+from rostam.schedule.runners.base import BaseRunner
 from rostam.utils.constants import Loader, Settings
 from rostam.vcs.git import Git
 
 Database = Loader.class_loader(Settings.DB_CONNECTOR())
 BASE_FOLDER = Settings.BASE_FOLDER()
-BaseRunner = Loader.class_loader(Settings.RUNNER())
 
 log = logging.getLogger(__name__)
 
@@ -31,7 +33,8 @@ class Runner(BaseRunner):
     def __init__(self):
         super(Runner, self).__init__()
 
-    def pull(self, container_id, repo_url, repo_path):
+    @classmethod
+    def pull(cls, container_id, repo_url, repo_path):
         '''
         pull to get the latest revision of the repository
 
@@ -42,14 +45,15 @@ class Runner(BaseRunner):
         :param repo_path: string
         repository path in local os
         '''
-        db = Database(BASE_FOLDER + "rostam.db")
+        db = Database(path.join(BASE_FOLDER, "rostam.db"))
         item = Git(repo_url=repo_url, repo_path=repo_path)
         item.pull()
         log.info("pulled from {0} to {1}".format(str(repo_url), str(repo_path)))
-        db.update_vcs_revision(container_id=container_id, latest_revision=item.repo.commit_info(end=1)[0])
+        db.update_vcs_revision(container_id=container_id, latest_revision=item.repo.head)
         db.db.close()
 
-    def build(self, container_id, repo_url, repo_path, timeout, tag):
+    @classmethod
+    def build(cls, container_id, repo_url, repo_path, timeout, tag):
         '''
         build container
 
@@ -64,7 +68,7 @@ class Runner(BaseRunner):
         :param tag: string
         tag of the container
         '''
-        db = Database(BASE_FOLDER + "rostam.db")
+        db = Database(path.join(BASE_FOLDER, "rostam.db"))
         cli = DockerApi(timeout=10 * 60)
         if db.time_to_build(container_id):
             try:
@@ -73,12 +77,15 @@ class Runner(BaseRunner):
                 time_entry = datetime.now()
                 build_time = time_entry.strftime("%Y-%m-%d %H:%M:%S.%f")
                 item = Git(repo_url=repo_url, repo_path=repo_path)
-                built_revision = item.repo.commit_info(end=1)[0]
+                item.pull()
+                built_revision = item.repo.head
+                # repo = Gittle.clone(repo_url, repo_path)
+                # built_revision = repo.commit_info(end=1)[0]
                 db.update_vcs_revision(container_id=container_id, built_revision=built_revision)
-                entry = TimeEntry(container_id=container_id, timestamp=build_time, build_output=output)
+                entry = TimeEntry(container_id=container_id, timestamp=build_time, build_output=''.join(output))
                 db.insert(entry)
                 log.info("successfully build {0} at revision : {1}".format(
-                    str(container_name) + ":" + str(container_tag), str(built_revision)))
+                    str(container_id), str(built_revision)))
                 return True
             except (TypeError, DockerException, InvalidVersion):
                 log.warn("building {0} failed".format(str(container_name) + ":" + str(container_tag)))

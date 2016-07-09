@@ -112,7 +112,7 @@ class Database(BaseDB):
             log.warn("error happend : {0}".format(e))
         return container_id
 
-    def time_to_build(container_id):
+    def time_to_build(self, container_id):
         '''
         calculate the next time that we should build this `container_id`
 
@@ -132,6 +132,9 @@ class Database(BaseDB):
             if current_time >= build_time + timedelta(minutes=interval):
                 return True
             return False
+        except IndexError:
+            # there is no timetable entry
+            return True
         except (TypeError, ValueError, OperationalError):
             log.warn("cannot calculate build time for {0}".format(str(container_id)))
             # cannot get build_date or interval
@@ -194,7 +197,7 @@ class Database(BaseDB):
 
     def set_container_status(self, container_id, enabled):
         try:
-            self.db.query("UPDATE containers SET enabled=:enabled WHERE container_id=:idd", enabled=enabled, idd=container_id)
+            self.db.query("UPDATE containers SET enabled=:enabled WHERE id=:idd", enabled=enabled, idd=container_id)
         except OperationalError as e:
             log.warn('error while enabled container {0} : {1}'.format(str(container_id), e))
 
