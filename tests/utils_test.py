@@ -10,7 +10,7 @@ class FileSyncTest(unittest.TestCase):
 
     def test_read_properties_file(self):
         res = read_properties_file()
-        self.assertTrue(len(res['hello world:latest']) == 4)
+        self.assertTrue(len(res['hello world:latest']) == 6)
         self.assertEqual(res['hello world:latest']['interval'], 666)
         self.assertEqual(res['hello world:latest']['tag'], 'latest')
         self.assertEqual(res['hello world:latest']['repo'], 'https://github.com/abzcoding/test.git')

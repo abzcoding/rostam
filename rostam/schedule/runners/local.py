@@ -53,6 +53,51 @@ class Runner(BaseRunner):
         db.db.close()
 
     @classmethod
+    def push(cls, name, remote_name, remote_registry, container_id, repo, repo_path, timeout=600, tag="latest", stream=True, insecure_registry=False):
+        '''
+        push images to docker repository
+
+        :param name: string
+        container's name
+        :param tag: string : 'latest'
+        container's tag
+        :param remote_name: string
+        name of the image on the `remote_registry`
+        :param remote_registry: string
+        remote docker registry server
+        :param container_id: int
+        id of the container
+        :param repo_url: string
+        repository url
+        :param repo_path: string
+        path that contains Dockerfile
+        :param timeout: int : 600
+        amount of timeout in seconds
+        :param stream: bool : True
+        Stream the output as a blocking generator
+        :param insecure_registry: bool : False
+        Use http:// to connect to the registry
+        '''
+        db = Database(path.join(BASE_FOLDER, "rostam.db"))
+        cli = DockerApi(timeout=timeout)
+        try:
+            if Runner.build(container_id, repo, repo_path, timeout, str(name).replace(' ', '-') + ":" + str(tag)):
+                if cli.tag(str(name).replace(' ', '-') + ":" + str(tag), str(remote_registry) + "/" + str(remote_name), str(tag)):
+                    output = cli.push(name=str(remote_registry) + "/" + str(remote_name),
+                                      tag=str(tag), stream=stream, insecure_registry=insecure_registry)
+                    log.warn('push result : {0}'.format(''.join(output)))
+                    db.db.close()
+                    return True
+                else:
+                    log.warn('cannot tag the following image : {0}')
+            db.db.close()
+            return False
+        except Exception as e:
+            log.warn('pushing {0} failed : {1}'.format(name, e))
+            db.db.close()
+            return False
+
+    @classmethod
     def build(cls, container_id, repo_url, repo_path, timeout, tag):
         '''
         build container
@@ -69,11 +114,11 @@ class Runner(BaseRunner):
         tag of the container
         '''
         db = Database(path.join(BASE_FOLDER, "rostam.db"))
-        cli = DockerApi(timeout=10 * 60)
+        cli = DockerApi(timeout=timeout)
         if db.time_to_build(container_id):
             try:
                 output = cli.build(directory=repo_path, timeout=timeout, tag=tag)
-                log.debug("build result : {0}".format(output))
+                log.debug("build result : {0}".format(''.join(output)))
                 time_entry = datetime.now()
                 build_time = time_entry.strftime("%Y-%m-%d %H:%M:%S.%f")
                 item = Git(repo_url=repo_url, repo_path=repo_path)
@@ -86,10 +131,12 @@ class Runner(BaseRunner):
                 db.insert(entry)
                 log.info("successfully build {0} at revision : {1}".format(
                     str(container_id), str(built_revision)))
+                db.db.close()
                 return True
             except (TypeError, DockerException, InvalidVersion):
                 log.warn("building {0} failed".format(str(container_name) + ":" + str(container_tag)))
+                db.db.close()
                 return False
         else:
+            db.db.close()
             return True
-        db.db.close()

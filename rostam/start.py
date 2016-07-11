@@ -39,9 +39,13 @@ def create_jobs(db, sched, runner):
             sched.add_job(job=runner.pull, minutes=int(r['interval']) / 2,
                           job_id="pull-" + str(r['name']) + '-' + str(r['tag']),
                           args=[container_id, repo, repo_path])
-            sched.add_job(job=runner.build, minutes=int(r['interval']),
-                          job_id="build-" + str(r['name']) + '-' + str(r['tag']),
-                          args=[container_id, repo, repo_path, r['timeout'], r['tag']])
+            # sched.add_job(job=runner.build, minutes=int(r['interval']),
+            #               job_id="build-" + str(r['name']) + '-' + str(r['tag']),
+            #               args=[container_id, repo, repo_path, r['timeout'], r['tag']])
+            sched.add_job(job=runner.push, minutes=int(r['interval']),
+                          job_id="push-" + str(r['name']) + '-' + str(r['tag']),
+                          args=[r['name'], r['remote_name'], r['remote_registry'],
+                                container_id, repo, repo_path, r['timeout'], r['tag']])
             db.set_container_status(container_id=container_id, enabled=True)
 
 
@@ -80,7 +84,7 @@ def main():
             if sched.scheduler.running == False:
                 sched.start()
             if args.test:
-                sleep(100)
+                sleep(150)
                 raise KeyboardInterrupt
             sleep(60)
     except (KeyboardInterrupt, SystemExit):

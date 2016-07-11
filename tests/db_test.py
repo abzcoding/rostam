@@ -1,12 +1,14 @@
-from os import path, remove
 import unittest
-from rostam.db.sqlite import Database
+from datetime import datetime
+from os import path, remove
+
 from rostam.db.models.container import Docker
 from rostam.db.models.timeentry import TimeEntry
-from datetime import datetime
+from rostam.db.sqlite import Database
 
 
 class SQLITETest(unittest.TestCase):
+
     def test_database_create(self):
         location = 'rostam.db'
         if path.isfile(location):
@@ -24,7 +26,7 @@ class SQLITETest(unittest.TestCase):
         db = Database()
         container_id = db.get_container_id(container_name="doesnotexist")
         self.assertIsNone(container_id)
-        box = Docker(name="justfortest")
+        box = Docker(name="justfortest", remote_registry="example.registry")
         db.insert(value=box)
         container_id = db.get_container_id(container_name="justfortest")
         self.assertEqual(container_id, 1)
@@ -36,7 +38,7 @@ class SQLITETest(unittest.TestCase):
         db = Database()
         container_id = db.get_container_id(container_name="doesnotexist")
         self.assertIsNone(container_id)
-        box = Docker(name="insertTest")
+        box = Docker(name="insertTest", remote_registry="example.registry")
         db.insert(value=box)
         dc1 = {'name': 'insertTest'}
         rows = db.db.query("select name from containers")

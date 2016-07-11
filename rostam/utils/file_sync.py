@@ -31,9 +31,9 @@ def read_properties_file(properties_file="examples/containers.properties"):
         lines = inp.readlines()
         for line in lines:
             try:
-                name, tag, repo, interval = line.strip().split(',')
-                containers[str(name) + ":" + str(tag)] = {'name': name, 'tag': tag, 'repo': repo,
-                                                          'interval': int(interval)}
+                name, tag, repo, remote_name, remote_registry, interval = line.strip().split(',')
+                containers[str(name) + ":" + str(tag)] = {'name': name, 'tag': tag, 'repo': repo, 'remote_name': remote_name,
+                                                          'remote_registry': remote_registry, 'interval': int(interval)}
             except Exception as e:
                 log.warn("exception happend while reading from {0} : {1}".format(properties_file, e))
     return containers
@@ -53,7 +53,8 @@ def sync_properties(properties_file="examples/containers.properties", db_file="r
     # STEP 1: make sure all repositories exist in containers table
     for item in containers.values():
         if db.get_container_id(item['name'], item['tag']) is None:
-            cn = Docker(name=item['name'], tag=item['tag'], interval=item['interval'])
+            cn = Docker(name=item['name'], tag=item['tag'], interval=item['interval'],
+                        remote_name=item['remote_name'], remote_registry=item['remote_registry'])
             db.insert(cn)
     log.info("finished reading from {0}".format(properties_file))
     # STEP 2: make sure all containers have a VCS repo

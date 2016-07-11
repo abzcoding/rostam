@@ -51,7 +51,7 @@ class Database(BaseDB):
         '''
 
         self.db.query(
-            "CREATE TABLE IF NOT EXISTS containers(id INTEGER PRIMARY KEY AUTOINCREMENT, name TEXT NOT NULL, tag TEXT NOT NULL,timeout INT, interval INT,enabled BOOLEAN, UNIQUE (name,tag) ON CONFLICT ROLLBACK)")
+            "CREATE TABLE IF NOT EXISTS containers(id INTEGER PRIMARY KEY AUTOINCREMENT, name TEXT NOT NULL, tag TEXT NOT NULL,remote_name TEXT NOT NULL,remote_registry Text NOT NULL,timeout INT, interval INT,enabled BOOLEAN, UNIQUE (name,tag) ON CONFLICT ROLLBACK)")
         self.db.query(
             "CREATE TABLE IF NOT EXISTS timetable(id INTEGER PRIMARY KEY AUTOINCREMENT , build_date TIMESTAMP NOT NULL,build_output TEXT,build_result TEXT, container_id INTEGER, FOREIGN KEY(container_id) REFERENCES containers(id))")
         self.db.query(
@@ -72,8 +72,9 @@ class Database(BaseDB):
             log.warn("value cannot be None when inserting into database!")
             raise RuntimeError("cannot insert None object")
         elif isinstance(value, Docker):
-            self.db.query('INSERT INTO containers(name, tag, interval,timeout,enabled) VALUES (:name,:tag,:interval,:timeout,:enabled)',
-                          name=value.name, tag=value.tag, interval=value.interval, timeout=value.timeout, enabled=value.enabled)
+            self.db.query('INSERT INTO containers(name, tag, interval,timeout,remote_name,remote_registry,enabled) VALUES (:name,:tag,:interval,:timeout,:rname,:rreg,:enabled)',
+                          name=value.name, tag=value.tag, interval=value.interval, timeout=value.timeout, rname=value.remote_name,
+                          rreg=value.remote_registry, enabled=value.enabled)
         elif isinstance(value, TimeEntry):
             self.db.query(
                 'INSERT INTO timetable(container_id, build_date,build_output,build_result) VALUES (:container_id, :build_date,:build_output,:build_result)',
